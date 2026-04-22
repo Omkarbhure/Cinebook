@@ -1,0 +1,151 @@
+.container {
+  min-height: 100vh;
+  padding-top: 80px;
+}
+
+.hero {
+  background: linear-gradient(rgba(10, 10, 15, 0.8), rgba(10, 10, 15, 0.95)), url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=1200');
+  background-size: cover;
+  background-position: center;
+  padding: 80px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.heroContent h1 {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.address {
+  font-size: 18px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.meta {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.rating {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.facilities {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 32px;
+  color: #fff;
+}
+
+.movieList {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.movieRow {
+  display: flex;
+  gap: 32px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: var(--transition);
+}
+
+.movieRow:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card);
+}
+
+.moviePoster {
+  width: 120px;
+  aspect-ratio: 2/3;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.moviePoster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.movieInfo {
+  flex: 1;
+}
+
+.movieHeader h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.movieMeta {
+  display: flex;
+  gap: 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.showtimes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.timeSlot {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-align: center;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.timeSlot:hover {
+  border-color: var(--primary);
+  background: rgba(229, 9, 20, 0.1);
+  transform: translateY(-2px);
+}
+
+.time {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.format {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+@media (max-width: 768px) {
+  .movieRow {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .moviePoster {
+    width: 100px;
+  }
+}

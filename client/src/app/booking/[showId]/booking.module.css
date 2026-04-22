@@ -1,0 +1,247 @@
+.container {
+  min-height: 100vh;
+  padding-top: 100px;
+  background: var(--bg-primary);
+}
+
+.layout {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 48px;
+}
+
+.mapSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.screen {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 60px;
+  text-align: center;
+}
+
+.screenCurve {
+  height: 8px;
+  width: 100%;
+  background: var(--primary);
+  border-radius: 50% 50% 0 0;
+  box-shadow: 0 10px 30px var(--primary-glow);
+  margin-bottom: 12px;
+}
+
+.screenText {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+}
+
+.seatsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.rowLabel {
+  width: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.rowSeats {
+  display: flex;
+  gap: 8px;
+}
+
+.seat {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.seat:hover:not(.booked) {
+  transform: scale(1.2);
+  border-color: #fff;
+}
+
+.silver { border-color: #a0a0b8; }
+.gold { border-color: #f5b041; }
+.platinum { border-color: #ec7063; }
+
+.selected {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.booked {
+  background: var(--bg-elevated) !important;
+  border-color: transparent !important;
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.legend {
+  display: flex;
+  gap: 24px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+}
+
+.summarySide {
+  position: sticky;
+  top: 100px;
+}
+
+.summaryCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.movieHeader {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.miniPoster {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: var(--radius-xs);
+}
+
+.movieTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.showInfo {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.selectedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.seatTag {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.noSelection {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.priceBreakdown {
+  margin-bottom: 24px;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.grandTotal {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.disclaimer {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 16px;
+}
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .summarySide {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .seatsContainer {
+    overflow-x: auto;
+    width: 100vw;
+    margin-left: -24px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  .rowLabels {
+    display: none;
+  }
+}

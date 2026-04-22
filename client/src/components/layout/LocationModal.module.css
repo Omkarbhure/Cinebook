@@ -1,0 +1,40 @@
+.overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 40px;
+  max-width: 600px; width: 100%; box-shadow: var(--shadow-lg);
+  animation: scaleUp 0.3s ease;
+}
+@keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.header { text-align: center; margin-bottom: 32px; }
+.icon { font-size: 40px; display: block; margin-bottom: 12px; }
+.title { font-size: 28px; font-weight: 800; margin-bottom: 8px; color: var(--text-primary); }
+.subtitle { color: var(--text-secondary); font-size: 16px; }
+
+.grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px;
+  margin-bottom: 32px;
+}
+.cityCard {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  text-align: left; transition: var(--transition);
+}
+.cityCard:hover {
+  background: var(--primary-glow); border-color: var(--primary);
+  transform: translateY(-2px);
+}
+.cityName { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+.arrow { opacity: 0; transition: 0.2s; color: var(--primary); }
+.cityCard:hover .arrow { opacity: 1; transform: translateX(4px); }
+
+.footer { text-align: center; color: var(--text-muted); font-size: 14px; }

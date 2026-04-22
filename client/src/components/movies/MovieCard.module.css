@@ -1,0 +1,56 @@
+.card {
+  display: block; border-radius: var(--radius-md); overflow: hidden;
+  background: var(--bg-card); border: 1px solid var(--border);
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  cursor: pointer;
+}
+.card:hover { transform: translateY(-8px); box-shadow: 0 24px 48px rgba(0,0,0,0.6); border-color: var(--border-hover); }
+
+.posterWrapper { position: relative; aspect-ratio: 2/3; overflow: hidden; }
+.poster { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; display: block; }
+.card:hover .poster { transform: scale(1.06); }
+
+.overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0) 100%);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 20px; opacity: 0; transition: opacity 0.3s ease;
+}
+.card:hover .overlay { opacity: 1; }
+.bookBtn {
+  background: var(--gradient-primary); color: #fff;
+  border: none; padding: 10px 24px; border-radius: var(--radius-sm);
+  font-weight: 700; font-size: 13px; letter-spacing: 0.5px;
+  cursor: pointer; transform: translateY(8px); transition: transform 0.3s ease;
+  box-shadow: 0 4px 16px rgba(229,9,20,0.5);
+}
+.card:hover .bookBtn { transform: translateY(0); }
+
+.rating {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  color: var(--accent); font-size: 12px; font-weight: 700;
+  padding: 4px 10px; border-radius: var(--radius-full);
+  display: flex; align-items: center; gap: 4px;
+}
+.statusBadge {
+  position: absolute; top: 10px; left: 10px;
+  font-size: 10px; font-weight: 700; padding: 4px 10px;
+  border-radius: var(--radius-full); letter-spacing: 0.5px;
+}
+.nowPlaying { background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+.upcoming { background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+
+.info { padding: 14px; }
+.title {
+  font-size: 15px; font-weight: 700; margin-bottom: 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.genre { font-size: 12px; color: var(--text-secondary); }
+.duration { font-size: 11px; color: var(--text-muted); }
+.languages { display: flex; gap: 6px; flex-wrap: wrap; }
+.langTag {
+  font-size: 10px; padding: 3px 8px; border-radius: var(--radius-full);
+  background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border);
+}
