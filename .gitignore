@@ -1,3 +1,37 @@
-client/.next/
+# Dependencies
+node_modules/
+client/node_modules/
 server/node_modules/
+
+# Build output
+client/.next/
+client/out/
+
+# Environment files — NEVER commit these
+.env
+.env.local
+.env.production
+.env.development
 server/.env
+client/.env.local
+client/.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test/debug scripts (not needed in production)
+server/check_*.js
+server/fix_*.js
+server/seed_*.js
+server/get_admin_token.js
+server/reset_admin_*.js
+server/set_admin_*.js
+server/add_indexes.js
+server/run_tests.js
+server/test_suite.js
+server/api_health_check.js
