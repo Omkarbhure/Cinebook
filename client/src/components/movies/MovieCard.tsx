@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './MovieCard.module.css';
 
 interface Movie {
@@ -20,7 +21,18 @@ export default function MovieCard({ movie }: { movie: Movie }) {
   return (
     <Link href={`/movies/${movie._id}`} className={styles.card}>
       <div className={styles.posterWrapper}>
-        <img src={movie.poster} alt={movie.title} className={styles.poster} />
+        <Image
+          src={movie.poster}
+          alt={movie.title}
+          fill
+          sizes="(max-width: 480px) 50vw, (max-width: 768px) 33vw, 200px"
+          className={styles.poster}
+          style={{ objectFit: 'cover' }}
+          loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/fallback-poster.svg';
+          }}
+        />
         <div className={styles.overlay}>
           <button className={styles.bookBtn}>Book Tickets</button>
         </div>

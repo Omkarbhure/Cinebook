@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const { startScheduler } = require('./services/showScheduler');
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -10,11 +11,16 @@ const showRoutes = require('./routes/shows');
 const bookingRoutes = require('./routes/bookings');
 const adminRoutes = require('./routes/admin');
 const theaterRoutes = require('./routes/theaters');
+const walletRoutes = require('./routes/wallet');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB then start scheduler
+connectDB().then(() => {
+  startScheduler();
+}).catch(() => {
+  // connectDB handles its own error logging
+});
 
 // Middleware
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
@@ -44,14 +50,62 @@ app.use('/api/shows', showRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/theaters', theaterRoutes);
+app.use('/api/wallet', walletRoutes);
 
 // 404 Handler
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 
-// Global Error Handler
+// Global Error Handler — catches any unhandled errors thrown in routes/controllers
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Internal server error' });
+  // Log full stack in development, just message in production
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('Unhandled error:', err.stack);
+  } else {
+    console.error('Unhandled error:', err.message);
+  }
+
+  // Multer file size error
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ success: false, message: 'File too large. Maximum size is 5MB.' });
+  }
+
+  // Multer file type error
+  if (err.message === 'Only image files allowed') {
+    return res.status(400).json({ success: false, message: 'Only image files are allowed.' });
+  }
+
+  // Mongoose validation errors
+  if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors).map(e => e.message);
+    return res.status(400).json({ success: false, message: messages.join(', ') });
+  }
+
+  // Mongoose duplicate key
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue || {})[0] || 'field';
+    return res.status(400).json({ success: false, message: `${field} already exists` });
+  }
+
+  // Mongoose CastError (invalid ObjectId)
+  if (err.name === 'CastError') {
+    return res.status(400).json({ success: false, message: 'Invalid ID format' });
+  }
+
+  // JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({ success: false, message: 'Invalid token' });
+  }
+  if (err.name === 'TokenExpiredError') {
+    return res.status(401).json({ success: false, message: 'Token expired. Please login again.' });
+  }
+
+  // Default — never expose raw stack traces in production
+  const statusCode = err.status || err.statusCode || 500;
+  const message = process.env.NODE_ENV === 'production' && statusCode === 500
+    ? 'Something went wrong. Please try again.'
+    : err.message || 'Internal server error';
+
+  res.status(statusCode).json({ success: false, message });
 });
 
 const PORT = process.env.PORT || 5000;

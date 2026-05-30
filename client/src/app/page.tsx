@@ -28,8 +28,8 @@ export default function Home() {
     const fetchMovies = async () => {
       try {
         const [nowRes, upcomingRes] = await Promise.all([
-          getMovies({ status: 'now_playing', limit: '8', city: city || '' }),
-          getMovies({ status: 'upcoming', limit: '8', city: city || '' })
+          getMovies({ status: 'now_playing', limit: '8', ...(city ? { city } : {}) }),
+          getMovies({ status: 'upcoming', limit: '8' })
         ]);
         setNowPlaying(nowRes.data.movies);
         setUpcoming(upcomingRes.data.movies);

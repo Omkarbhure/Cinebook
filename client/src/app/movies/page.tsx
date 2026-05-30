@@ -5,6 +5,7 @@ import { useLocation } from '@/context/LocationContext';
 import Navbar from '@/components/layout/Navbar';
 import MovieCard from '@/components/movies/MovieCard';
 import { getMovies } from '@/lib/api';
+import toast from 'react-hot-toast';
 import styles from './movies.module.css';
 
 const GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Thriller', 'Animation', 'Romance'];
@@ -25,6 +26,7 @@ export default function MoviesPage() {
   const searchParams = useSearchParams();
   const { city } = useLocation();
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     status: searchParams.get('status') || '',
@@ -48,8 +50,10 @@ export default function MoviesPage() {
         
         const res = await getMovies(query);
         setMovies(res.data.movies);
+        setTotal(res.data.total || res.data.movies.length);
       } catch (err) {
         console.error('Failed to fetch movies:', err);
+        toast.error('Failed to load movies. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -158,6 +162,15 @@ export default function MoviesPage() {
                   Showing results for: <strong>"{filters.search}"</strong>
                   <button onClick={() => setFilters(prev => ({...prev, search: ''}))}>✕</button>
                 </div>
+              )}
+
+              {!loading && (
+                <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 16 }}>
+                  {total} movie{total !== 1 ? 's' : ''} found
+                  {filters.genre && ` · Genre: ${filters.genre}`}
+                  {filters.language && ` · Language: ${filters.language}`}
+                  {filters.status && ` · ${filters.status === 'now_playing' ? 'Now Playing' : 'Upcoming'}`}
+                </p>
               )}
 
               <div className={styles.movieGrid}>

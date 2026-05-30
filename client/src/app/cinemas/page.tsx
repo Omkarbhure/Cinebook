@@ -2,12 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from '@/context/LocationContext';
 import Navbar from '@/components/layout/Navbar';
-import { getMovies } from '@/lib/api';
-import axios from 'axios';
+import api from '@/lib/api';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import styles from './cinemas.module.css';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 interface Theater {
   _id: string;
@@ -23,20 +21,25 @@ export default function CinemasPage() {
   const { city } = useLocation();
   const [theaters, setTheaters] = useState<Theater[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+
+  const fetchTheaters = async () => {
+    if (!city) { setLoading(false); return; }
+    setLoading(true);
+    setFetchError(false);
+    try {
+      const res = await api.get(`/theaters?city=${encodeURIComponent(city)}`);
+      setTheaters(res.data.data || []);
+    } catch (err: any) {
+      setFetchError(true);
+      const msg = err?.response?.data?.message || 'Failed to load theaters. Please try again.';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTheaters = async () => {
-      if (!city) return;
-      setLoading(true);
-      try {
-        const res = await axios.get(`${API}/theaters?city=${city}`);
-        setTheaters(res.data.data);
-      } catch (err) {
-        console.error('Failed to fetch theaters:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchTheaters();
   }, [city]);
 
@@ -54,6 +57,13 @@ export default function CinemasPage() {
           <div className={styles.theaterGrid}>
             {loading ? (
               Array(4).fill(0).map((_, i) => <div key={i} className="skeleton" style={{height: '180px', borderRadius: '16px'}} />)
+            ) : fetchError ? (
+              <div className={styles.emptyState}>
+                <p>Failed to load theaters. Please check your connection.</p>
+                <button className="btn btn-primary btn-sm" style={{ marginTop: 12 }} onClick={fetchTheaters}>
+                  Retry
+                </button>
+              </div>
             ) : theaters.length > 0 ? (
               theaters.map(theater => (
                 <div key={theater._id} className={styles.theaterCard}>

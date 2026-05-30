@@ -40,6 +40,8 @@
   box-shadow: var(--shadow-lg);
   display: grid; grid-template-columns: 1fr; gap: 4px;
   animation: slideDown 0.15s ease;
+  max-height: 360px;
+  overflow-y: auto;
 }
 .cityItem {
   padding: 8px 12px; border-radius: var(--radius-sm);
@@ -48,6 +50,28 @@
 }
 .cityItem:hover { background: var(--bg-elevated); color: var(--text-primary); }
 .cityItemActive { background: var(--primary-glow); color: var(--primary); font-weight: 600; }
+
+.cityDetectBtn {
+  width: 100%; padding: 9px 12px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; color: var(--primary);
+  background: var(--primary-glow); border: none;
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; transition: var(--transition); text-align: left;
+}
+.cityDetectBtn:hover:not(:disabled) { background: rgba(229,9,20,0.2); }
+.cityDetectBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cityDetectSpinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(229,9,20,0.3);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spinCity 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spinCity { to { transform: rotate(360deg); } }
+
+.cityDivider { height: 1px; background: var(--border); margin: 6px 0; }
 
 .navLinks { display: flex; align-items: center; gap: 8px; }
 .navLink {
@@ -77,30 +101,63 @@
 
 .userMenu { position: relative; }
 .avatarBtn {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 10px;
   background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-  border-radius: var(--radius-full); padding: 6px 12px 6px 6px;
+  border-radius: var(--radius-full); padding: 5px 14px 5px 5px;
   color: var(--text-primary); transition: var(--transition);
 }
-.avatarBtn:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.08); }
-.avatarImg { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+.avatarBtn:hover { border-color: var(--primary); background: rgba(255,255,255,0.08); }
+.avatarImg {
+  width: 36px; height: 36px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  border: 2px solid var(--primary);
+  display: block;
+}
 .avatarFallback {
-  width: 30px; height: 30px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   background: var(--gradient-primary); color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px;
+  font-weight: 700; font-size: 15px; flex-shrink: 0;
+  border: 2px solid var(--primary);
 }
-.userName { font-size: 14px; font-weight: 500; }
+.userName { font-size: 14px; font-weight: 600; color: var(--text-primary); }
 
 .dropdown {
   position: absolute; top: calc(100% + 8px); right: 0;
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius-md); padding: 8px;
-  min-width: 180px; z-index: 100;
+  min-width: 220px; z-index: 100;
   box-shadow: var(--shadow-lg);
   animation: slideDown 0.15s ease;
 }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* User info at top of dropdown */
+.dropdownUser {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px 12px;
+}
+.dropdownAvatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  border: 2px solid var(--primary);
+}
+.dropdownAvatarFallback {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--gradient-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; flex-shrink: 0;
+  border: 2px solid var(--primary);
+}
+.dropdownUserInfo { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.dropdownUserName {
+  font-size: 14px; font-weight: 700; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dropdownUserEmail {
+  font-size: 11px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .dropdownItem {
   display: flex; align-items: center; gap: 10px;
   padding: 10px 12px; border-radius: var(--radius-sm);

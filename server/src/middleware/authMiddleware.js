@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 
 exports.protect = async (req, res, next) => {
@@ -10,6 +11,12 @@ exports.protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Guard against malformed token payload
+    if (!decoded.id || !mongoose.Types.ObjectId.isValid(decoded.id)) {
+      return res.status(401).json({ success: false, message: 'Token invalid' });
+    }
+
     req.user = await User.findById(decoded.id);
     if (!req.user) return res.status(401).json({ success: false, message: 'User not found' });
     next();

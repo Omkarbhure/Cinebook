@@ -13,6 +13,19 @@ const userSchema = new mongoose.Schema({
   emailVerifyToken: String,
   resetPasswordToken: String,
   resetPasswordExpire: Date,
+  loginOtp: { type: String, select: false },
+  loginOtpExpire: { type: Date, select: false },
+  registerOtp: { type: String, select: false },
+  registerOtpExpire: { type: Date, select: false },
+  pendingRegistration: { type: Object, select: false },
+  // Wallet
+  walletBalance: { type: Number, default: 0 },
+  walletTransactions: [{
+    type:        { type: String, enum: ['credit', 'debit'], required: true },
+    amount:      { type: Number, required: true },
+    description: { type: String, required: true },
+    date:        { type: Date, default: Date.now },
+  }],
 }, { timestamps: true });
 
 // Hash password before save
@@ -22,6 +35,7 @@ userSchema.pre('save', async function () {
 });
 
 userSchema.methods.matchPassword = async function (entered) {
+  if (!this.password) return false; // Account has no password (e.g. Google-only)
   return await bcrypt.compare(entered, this.password);
 };
 

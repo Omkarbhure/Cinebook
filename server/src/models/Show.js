@@ -4,8 +4,12 @@ const seatSchema = new mongoose.Schema({
   row: { type: Number, required: true },
   col: { type: Number, required: true },
   category: { type: String, enum: ['silver', 'gold', 'platinum'], default: 'silver' },
+  // Permanent booking
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', default: null },
+  // Temporary lock while user is in payment flow (expires after 10 minutes)
+  lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  lockedUntil: { type: Date, default: null },
 }, { _id: false });
 
 const showSchema = new mongoose.Schema({

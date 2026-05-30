@@ -3,45 +3,86 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import { getMovieById, getShowsByMovie } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import { useLocation } from '@/context/LocationContext';
 import toast from 'react-hot-toast';
 import styles from './detail.module.css';
 
 export default function MovieDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { city } = useLocation();
   const [movie, setMovie] = useState<any>(null);
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [movieError, setMovieError] = useState('');
+  const [showsError, setShowsError] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Use local date string to avoid timezone offset issues
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  });
   const [dates, setDates] = useState<string[]>([]);
 
   useEffect(() => {
-    // Generate next 7 days for date picker
+    // Generate next 7 days using local dates (not UTC) to avoid timezone issues
     const next7Days = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
-      next7Days.push(date.toISOString().split('T')[0]);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      next7Days.push(`${y}-${m}-${d}`);
     }
     setDates(next7Days);
+  }, []);
 
-    const fetchData = async () => {
+  // Fetch movie once
+  useEffect(() => {
+    const fetchMovie = async () => {
       try {
         const movieRes = await getMovieById(id as string);
         setMovie(movieRes.data.movie);
-        
-        const showsRes = await getShowsByMovie(id as string, { date: selectedDate });
-        setShows(showsRes.data.shows);
-      } catch (err) {
-        toast.error('Failed to load movie details');
+      } catch (err: any) {
+        const status = err?.response?.status;
+        if (status === 404) setMovieError('Movie not found.');
+        else if (status === 400) setMovieError('Invalid movie ID.');
+        else setMovieError('Failed to load movie details. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, [id, selectedDate]);
+    fetchMovie();
+  }, [id]);
+
+  // Re-fetch shows whenever date OR city changes
+  useEffect(() => {
+    if (!id) return;
+    setShowsError(false);
+    const fetchShows = async () => {
+      try {
+        const params: Record<string, string> = { date: selectedDate };
+        if (city) params.city = city;
+        const showsRes = await getShowsByMovie(id as string, params);
+        setShows(showsRes.data.shows);
+      } catch (err) {
+        setShows([]);
+        setShowsError(true);
+      }
+    };
+    fetchShows();
+  }, [id, selectedDate, city]);
 
   const handleShowClick = (showId: string) => {
+    // Wait for auth to finish loading before checking
+    if (authLoading) return;
+    if (!user) {
+      toast.error('Please login to book tickets');
+      router.push(`/auth/login?redirect=/booking/${showId}`);
+      return;
+    }
     router.push(`/booking/${showId}`);
   };
 
@@ -52,7 +93,18 @@ export default function MovieDetailPage() {
     </div>
   );
 
-  if (!movie) return <div className={styles.error}>Movie not found</div>;
+  if (movieError) return (
+    <div className={styles.loadingContainer}>
+      <Navbar />
+      <div style={{ textAlign: 'center', padding: '40px' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🎬</div>
+        <h2 style={{ color: 'var(--text-primary)', marginBottom: 8 }}>{movieError}</h2>
+        <button className="btn btn-primary" onClick={() => router.back()}>← Go Back</button>
+      </div>
+    </div>
+  );
+
+  if (!movie) return null;
 
   return (
     <main className={styles.main}>
@@ -65,7 +117,12 @@ export default function MovieDetailPage() {
         <div className="container">
           <div className={styles.heroContent}>
             <div className={styles.posterSide}>
-              <img src={movie.poster} alt={movie.title} className={styles.poster} />
+              <img
+                src={movie.poster}
+                alt={movie.title}
+                className={styles.poster}
+                onError={(e) => { (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x450?text=No+Poster'; }}
+              />
             </div>
             <div className={styles.infoSide}>
               <div className={styles.badges}>
@@ -87,9 +144,15 @@ export default function MovieDetailPage() {
                 </div>
               </div>
               <div className={styles.languages}>
-                {movie.language.map((l: string) => <span key={l} className={styles.lang}>{l}</span>)}
+                {movie.languages.map((l: string) => <span key={l} className={styles.lang}>{l}</span>)}
               </div>
-              <button className="btn btn-primary btn-lg" onClick={() => document.getElementById('shows')?.scrollIntoView({behavior:'smooth'})}>
+              <button className="btn btn-primary btn-lg" onClick={() => {
+                if (!user) {
+                  router.push('/auth/login');
+                  return;
+                }
+                document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' });
+              }}>
                 Book Tickets
               </button>
             </div>
@@ -158,7 +221,7 @@ export default function MovieDetailPage() {
                         <div key={theaterId} className={styles.theaterBlock}>
                           <div className={styles.theaterInfo}>
                             <h4 className={styles.theaterName}>{theater.name}</h4>
-                            <p className={styles.theaterLoc}>{theater.location}, {theater.city}</p>
+                            <p className={styles.theaterLoc}>{theater.address}, {theater.city}</p>
                           </div>
                           <div className={styles.timeGrid}>
                             {theaterShows.map((show: any) => (
@@ -177,7 +240,30 @@ export default function MovieDetailPage() {
                     })
                   ) : (
                     <div className={styles.noShows}>
-                      <p>No shows available for this date.</p>
+                      {showsError ? (
+                        <>
+                          <p>Failed to load shows. Please try again.</p>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ marginTop: 12 }}
+                            onClick={() => {
+                              setShowsError(false);
+                              const params: Record<string, string> = { date: selectedDate };
+                              if (city) params.city = city;
+                              getShowsByMovie(id as string, params)
+                                .then(r => setShows(r.data.shows))
+                                .catch(() => setShowsError(true));
+                            }}
+                          >
+                            Retry
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <p>No shows available{city ? ` in ${city}` : ''} for this date.</p>
+                          {city && <p style={{fontSize:'12px', marginTop:'6px', color:'var(--text-muted)'}}>Try changing your city from the navbar.</p>}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

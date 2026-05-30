@@ -13,7 +13,7 @@ export default function Navbar() {
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
   
   const { user, logout, isAdmin } = useAuth();
-  const { city, setCity, availableCities } = useLocation();
+  const { city, setCity, availableCities, detectLocation, detecting } = useLocation();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -33,7 +33,6 @@ export default function Navbar() {
     { href: '/', label: 'Home' },
     { href: '/movies', label: 'Movies' },
     { href: '/cinemas', label: 'Cinemas' },
-    { href: '/theaters-near-me', label: 'Near Me' },
     { href: '/movies?status=upcoming', label: 'Upcoming' },
   ];
 
@@ -62,8 +61,26 @@ export default function Navbar() {
 
             {cityDropdownOpen && (
               <div className={styles.cityDropdown}>
+                {/* Detect location option */}
+                <button
+                  className={styles.cityDetectBtn}
+                  onClick={async () => {
+                    const result = await detectLocation();
+                    if (result.success) {
+                      setCityDropdownOpen(false);
+                    }
+                  }}
+                  disabled={detecting}
+                >
+                  {detecting ? (
+                    <><span className={styles.cityDetectSpinner} /> Detecting...</>
+                  ) : (
+                    <><span>🎯</span> Use My Location</>
+                  )}
+                </button>
+                <div className={styles.cityDivider} />
                 {availableCities.map(c => (
-                  <button key={c} className={`${styles.cityItem} ${city === c ? styles.cityItemActive : ''}`} 
+                  <button key={c} className={`${styles.cityItem} ${city === c ? styles.cityItemActive : ''}`}
                     onClick={() => { setCity(c); setCityDropdownOpen(false); }}>
                     {c}
                   </button>
@@ -109,6 +126,19 @@ export default function Navbar() {
 
                 {dropdownOpen && (
                   <div className={styles.dropdown}>
+                    {/* User info header */}
+                    <div className={styles.dropdownUser}>
+                      {user.avatar ? (
+                        <img src={user.avatar} alt={user.name} className={styles.dropdownAvatar} />
+                      ) : (
+                        <div className={styles.dropdownAvatarFallback}>{user.name.charAt(0).toUpperCase()}</div>
+                      )}
+                      <div className={styles.dropdownUserInfo}>
+                        <span className={styles.dropdownUserName}>{user.name}</span>
+                        {user.email && <span className={styles.dropdownUserEmail}>{user.email}</span>}
+                      </div>
+                    </div>
+                    <div className={styles.dropdownDivider} />
                     <Link href="/profile" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>
                       <span>👤</span> My Profile
                     </Link>

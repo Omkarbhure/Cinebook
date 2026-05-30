@@ -13,18 +13,17 @@ const bookingSchema = new mongoose.Schema({
   totalAmount: { type: Number, required: true },
   convenienceFee: { type: Number, default: 0 },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
-  paymentMethod: { type: String, enum: ['card', 'upi', 'wallet', 'netbanking'], default: 'card' },
+  paymentMethod: { type: String, enum: ['card', 'upi', 'wallet', 'netbanking', 'cinebook_wallet'], default: 'card' },
   bookingId: { type: String, unique: true },
   qrCode: { type: String, default: '' },
   status: { type: String, enum: ['confirmed', 'cancelled', 'used'], default: 'confirmed' },
 }, { timestamps: true });
 
 // Generate unique booking ID
-bookingSchema.pre('save', function (next) {
+bookingSchema.pre('save', async function () {
   if (!this.bookingId) {
     this.bookingId = 'CB' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 4).toUpperCase();
   }
-  next();
 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import styles from './auth.module.css';
@@ -19,24 +19,68 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const { login, verifyFirebaseLogin, googleLogin, sendOtp, verifyOtp } = useAuth();
+  // Email OTP step
+  const [emailOtpStep, setEmailOtpStep] = useState(false);
+  const [emailOtpUserId, setEmailOtpUserId] = useState('');
+  const [emailOtpMasked, setEmailOtpMasked] = useState('');
+  const [emailOtp, setEmailOtp] = useState('');
+  const { login, verifyLoginOtp, verifyFirebaseLogin, googleLogin, sendOtp, verifyOtp, user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
+
+  // If already logged in, redirect appropriately
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace(user.role === 'admin' ? '/admin' : redirectTo);
+    }
+  }, [user, authLoading, redirectTo, router]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    setEmailError('');
     setLoading(true);
     try {
-      await login(email, password);
-      toast.success('Welcome back! 🎬');
-      router.push('/');
+      const result = await login(email, password);
+      if (result.requiresOtp) {
+        // Show OTP input step
+        setEmailOtpStep(true);
+        setEmailOtpUserId(result.userId!);
+        setEmailOtpMasked(result.maskedEmail!);
+        toast.success('OTP sent to your email 📧');
+      } else {
+        toast.success(result.role === 'admin' ? 'Welcome, Admin! 🛡️' : 'Welcome back! 🎬');
+        router.replace(result.role === 'admin' ? '/admin' : redirectTo);
+      }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Login failed');
+      const msg = err?.response?.data?.message || 'Login failed';
+      if (msg.includes('Google or Phone')) {
+        setEmailError(msg);
+      } else {
+        toast.error(msg);
+      }
+    } finally { setLoading(false); }
+  };
+
+  const handleVerifyEmailOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+    try {
+      const { role } = await verifyLoginOtp(emailOtpUserId, emailOtp);
+      toast.success('Logged in successfully! 🎉');
+      router.replace(role === 'admin' ? '/admin' : redirectTo);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Invalid OTP. Please try again.');
     } finally { setLoading(false); }
   };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     if (phone.length !== 10) return toast.error('Enter a valid 10-digit phone number');
     setLoading(true);
     try {
@@ -45,37 +89,47 @@ export default function LoginPage() {
       setOtpSent(true);
       toast.success('OTP sent! demo use 123456 📱');
     } catch (err: any) {
-      console.error(err);
       toast.error(err?.response?.data?.message || 'Failed to send OTP. Try again.');
     } finally { setLoading(false); }
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     try {
       const formattedPhone = `+91${phone}`;
       await verifyOtp(formattedPhone, otp);
       toast.success('Logged in successfully! 🎉');
-      router.push('/');
+      router.replace(redirectTo);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Invalid OTP. Please try again.');
     } finally { setLoading(false); }
   };
 
   const handleGoogleLogin = async () => {
+    if (loading) return;
     const provider = new GoogleAuthProvider();
     setLoading(true);
     try {
       const result = await signInWithPopup(firebaseAuth, provider);
       const idToken = await result.user.getIdToken();
-      // We'll reuse the verifyFirebaseLogin logic which handles token verification
-      await verifyFirebaseLogin(idToken, '');
+      const userData = await verifyFirebaseLogin(idToken, '');
       toast.success('Logged in with Google! 🚀');
-      router.push('/');
+      // Check role from context after login
+      router.replace(redirectTo);
     } catch (err: any) {
-      console.error('Google Auth Error Details:', err);
-      toast.error('Google login failed. Try again.');
+      const code = err?.code || '';
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        // user closed the popup — not an error
+      } else {
+        const msg = err?.response?.data?.message || err?.message || 'Google login failed. Try again.';
+        if (/429|too many/i.test(msg)) {
+          toast.error('Too many login attempts. Please wait a few minutes and try again.');
+        } else {
+          toast.error(msg);
+        }
+      }
     } finally { setLoading(false); }
   };
 
@@ -115,29 +169,87 @@ export default function LoginPage() {
             </div>
 
             {tab === 'email' && (
-              <form onSubmit={handleEmailLogin} className={styles.form}>
-                <div className="form-group">
-                  <label className="form-label">Email Address</label>
-                  <input type="email" className="form-input" placeholder="you@example.com"
-                    value={email} onChange={e => setEmail(e.target.value)} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Password</label>
-                  <div className={styles.passwordWrapper}>
-                    <input type={showPass ? 'text' : 'password'} className="form-input" placeholder="Your password"
-                      value={password} onChange={e => setPassword(e.target.value)} required />
-                    <button type="button" className={styles.eyeBtn} onClick={() => setShowPass(!showPass)}>
-                      {showPass ? '🙈' : '👁️'}
+              <>
+                {/* Step 2: Email OTP verification */}
+                {emailOtpStep ? (
+                  <form onSubmit={handleVerifyEmailOtp} className={styles.form}>
+                    <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                      <div style={{ fontSize: 40, marginBottom: 8 }}>📧</div>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+                        We sent a 6-digit OTP to <strong style={{ color: 'var(--text-primary)' }}>{emailOtpMasked}</strong>
+                      </p>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Enter OTP</label>
+                      <input
+                        type="text"
+                        className={`form-input ${styles.otpInput}`}
+                        placeholder="Enter 6-digit OTP"
+                        value={emailOtp}
+                        onChange={e => setEmailOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        maxLength={6}
+                        autoFocus
+                        required
+                      />
+                      <p className="form-hint">OTP expires in 5 minutes</p>
+                    </div>
+                    <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading || emailOtp.length !== 6}>
+                      {loading ? <span className="spinner" /> : '✅ Verify & Login'}
                     </button>
-                  </div>
-                </div>
-                <div className={styles.forgotRow}>
-                  <Link href="/auth/forgot-password" className={styles.forgotLink}>Forgot password?</Link>
-                </div>
-                <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
-                  {loading ? <span className="spinner" /> : '🚀 Sign In'}
-                </button>
-              </form>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-full"
+                      style={{ marginTop: 8 }}
+                      onClick={() => { setEmailOtpStep(false); setEmailOtp(''); }}
+                    >
+                      ← Back
+                    </button>
+                  </form>
+                ) : (
+                  /* Step 1: Email + Password */
+                  <form onSubmit={handleEmailLogin} className={styles.form}>
+                    <div className="form-group">
+                      <label className="form-label">Email or Username</label>
+                      <input type="text" className="form-input" placeholder="you@example.com or admin"
+                        value={email} onChange={e => { setEmail(e.target.value); setEmailError(''); }} required />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Password</label>
+                      <div className={styles.passwordWrapper}>
+                        <input type={showPass ? 'text' : 'password'} className="form-input" placeholder="Your password"
+                          value={password} onChange={e => setPassword(e.target.value)} required />
+                        <button type="button" className={styles.eyeBtn} onClick={() => setShowPass(!showPass)}>
+                          {showPass ? '🙈' : '👁️'}
+                        </button>
+                      </div>
+                    </div>
+                    {emailError && (
+                      <div style={{
+                        background: 'rgba(229,9,20,0.1)', border: '1px solid rgba(229,9,20,0.3)',
+                        borderRadius: '8px', padding: '12px 14px', fontSize: '13px', color: '#ff6b6b', lineHeight: 1.5
+                      }}>
+                        ⚠️ {emailError}
+                        <div style={{ marginTop: 8 }}>
+                          <button type="button" onClick={handleGoogleLogin}
+                            style={{ color: '#4285F4', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, padding: 0 }}>
+                            → Continue with Google
+                          </button>
+                          {' · '}
+                          <Link href="/auth/register" style={{ color: 'var(--primary)', fontWeight: 600, fontSize: 13 }}>
+                            Create new account
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                    <div className={styles.forgotRow}>
+                      <Link href="/auth/forgot-password" className={styles.forgotLink}>Forgot password?</Link>
+                    </div>
+                    <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
+                      {loading ? <span className="spinner" /> : '🚀 Sign In'}
+                    </button>
+                  </form>
+                )}
+              </>
             )}
 
             {tab === 'phone' && (
