@@ -13,9 +13,6 @@ const nextConfig: NextConfig = {
     deviceSizes: [320, 480, 640, 750, 1080],
     imageSizes: [64, 128, 256, 300, 384],
   },
-  turbopack: {
-    root: __dirname,
-  },
 };
 
 export default nextConfig;
