@@ -15,6 +15,9 @@ const walletRoutes = require('./routes/wallet');
 
 const app = express();
 
+// Trust Render's proxy (required for rate limiting and IP detection)
+app.set('trust proxy', 1);
+
 // Connect to MongoDB then start scheduler
 connectDB().then(() => {
   startScheduler();
