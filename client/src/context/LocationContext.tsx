@@ -105,7 +105,8 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
     const savedCity = localStorage.getItem('cinebook_city');
     if (savedCity) {
       setCityState(savedCity);
-      // If saved city is not in base list, add it to extra
+      // Provision on load too — ensures shows exist if they were cleared
+      provisionCity(savedCity);
       if (!BASE_CITIES.includes(savedCity)) {
         setExtraCities([savedCity]);
       }
@@ -119,14 +120,15 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
   const setCity = (newCity: string) => {
     setCityState(newCity);
     localStorage.setItem('cinebook_city', newCity);
-    // Only provision and track extra cities that aren't in the base list
+    // Provision theaters+shows for this city (ensureCity is idempotent — safe to call every time)
+    provisionCity(newCity);
+    // Track extra cities not in base list
     if (!BASE_CITIES.includes(newCity)) {
       setExtraCities(prev => {
         const updated = prev.includes(newCity) ? prev : [...prev, newCity];
         localStorage.setItem('cinebook_extra_cities', JSON.stringify(updated));
         return updated;
       });
-      provisionCity(newCity);
     }
   };
 
