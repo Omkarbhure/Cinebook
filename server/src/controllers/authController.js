@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 const { OAuth2Client } = require('google-auth-library');
 const twilio = require('twilio');
 const admin = require('../config/firebase');
@@ -10,18 +9,24 @@ const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
 
 const sendEmail = async ({ to, subject, html }) => {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    tls: { rejectUnauthorized: false },
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: { name: 'CineBook', email: process.env.EMAIL_USER },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
   });
-  await transporter.sendMail({
-    from: '"CineBook" <' + process.env.EMAIL_USER + '>',
-    to, subject, html,
-  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error('Brevo error: ' + err);
+  }
 };
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
