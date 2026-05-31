@@ -139,7 +139,11 @@ const refreshShows = async () => {
     }
 
     if (toCreate.length > 0) {
-      await Show.insertMany(toCreate, { ordered: false });
+      // Insert in chunks of 20 to avoid memory spikes on free-tier servers
+      const CHUNK_SIZE = 20;
+      for (let i = 0; i < toCreate.length; i += CHUNK_SIZE) {
+        await Show.insertMany(toCreate.slice(i, i + CHUNK_SIZE), { ordered: false });
+      }
     }
 
     if (deleted.deletedCount > 0 || toCreate.length > 0) {
