@@ -11,7 +11,9 @@ const generateToken = (id) =>
 
 const sendEmail = async ({ to, subject, html }) => {
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
   });
   await transporter.sendMail({
@@ -250,6 +252,7 @@ exports.login = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, phone: user.phone, role: user.role, avatar: user.avatar },
     });
   } catch (err) {
+    console.error('[Login Error]', err.message, err.stack);
     res.status(500).json({ success: false, message: err.message });
   }
 };
