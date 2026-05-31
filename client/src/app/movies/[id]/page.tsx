@@ -61,18 +61,27 @@ export default function MovieDetailPage() {
   useEffect(() => {
     if (!id) return;
     setShowsError(false);
-    const fetchShows = async () => {
+    let retryTimeout: ReturnType<typeof setTimeout>;
+
+    const fetchShows = async (isRetry = false) => {
       try {
         const params: Record<string, string> = { date: selectedDate };
         if (city) params.city = city;
         const showsRes = await getShowsByMovie(id as string, params);
-        setShows(showsRes.data.shows);
+        const fetchedShows = showsRes.data.shows;
+        setShows(fetchedShows);
+
+        // If no shows on first attempt, retry once after 4s (city may still be provisioning)
+        if (fetchedShows.length === 0 && !isRetry && city) {
+          retryTimeout = setTimeout(() => fetchShows(true), 4000);
+        }
       } catch (err) {
         setShows([]);
         setShowsError(true);
       }
     };
     fetchShows();
+    return () => clearTimeout(retryTimeout);
   }, [id, selectedDate, city]);
 
   const handleShowClick = (showId: string) => {

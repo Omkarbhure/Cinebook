@@ -54,7 +54,7 @@ exports.ensureCity = async (req, res) => {
       return res.json({ success: true, message: 'City already provisioned', theaters: existing.length });
     }
 
-    const movies = await Movie.find({}).limit(5);
+    const movies = await Movie.find({});
     if (movies.length === 0) {
       return res.status(400).json({ success: false, message: 'No movies available to schedule' });
     }
