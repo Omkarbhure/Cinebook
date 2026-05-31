@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLocation } from '@/context/LocationContext';
 import Navbar from '@/components/layout/Navbar';
@@ -23,6 +23,14 @@ interface Movie {
 }
 
 export default function MoviesPage() {
+  return (
+    <Suspense fallback={<div style={{height:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}><div className="spinner" /></div>}>
+      <MoviesPageContent />
+    </Suspense>
+  );
+}
+
+function MoviesPageContent() {
   const searchParams = useSearchParams();
   const { city } = useLocation();
   const [movies, setMovies] = useState<Movie[]>([]);

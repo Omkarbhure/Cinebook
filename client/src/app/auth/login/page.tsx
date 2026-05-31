@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -11,6 +11,14 @@ import { auth as firebaseAuth } from '@/lib/firebase';
 type Tab = 'email' | 'phone';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{height:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}><div className="spinner" /></div>}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const [tab, setTab] = useState<Tab>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
