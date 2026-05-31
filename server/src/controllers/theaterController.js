@@ -54,7 +54,7 @@ exports.ensureCity = async (req, res) => {
       return res.json({ success: true, message: 'City already provisioned', theaters: existing.length });
     }
 
-    const movies = await Movie.find({ status: 'now_playing' }).limit(5);
+    const movies = await Movie.find({}).limit(5);
     if (movies.length === 0) {
       return res.status(400).json({ success: false, message: 'No movies available to schedule' });
     }
@@ -168,7 +168,7 @@ exports.getTheatersByCity = async (req, res) => {
           location: { type: 'Point', coordinates: [rc.location.lng, rc.location.lat] },
         });
 
-        const movies = await Movie.find({ status: 'now_playing' }).limit(3);
+        const movies = await Movie.find({}).limit(3);
         const times = ['11:00 AM', '02:30 PM', '06:00 PM', '09:30 PM'];
         const days = getNext7Days();
         for (const movie of movies) {

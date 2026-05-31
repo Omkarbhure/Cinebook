@@ -60,7 +60,7 @@ const refreshShows = async () => {
       'seats.userId': null,
     });
 
-    const movies   = await Movie.find({ status: 'now_playing' });
+    const movies   = await Movie.find({});
     const theaters = await Theater.find({});
     const days     = getNext3Days();
 
