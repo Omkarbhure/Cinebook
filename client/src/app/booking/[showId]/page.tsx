@@ -196,7 +196,7 @@ export default function BookingPage() {
                     const isSelected = selectedSeats.some(s => s.row === seat.row && s.col === seat.col);
                     const isBooked = !!seat.userId;
                     const isLockedByOther = !isBooked && seat.lockedBy &&
-                      seat.lockedBy.toString() !== (user?.id || (user as any)?._id) &&
+                      seat.lockedBy.toString() !== user?.id &&
                       new Date(seat.lockedUntil) > now;
                     return (
                       <button
