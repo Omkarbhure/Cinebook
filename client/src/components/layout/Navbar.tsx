@@ -33,7 +33,6 @@ export default function Navbar() {
     { href: '/', label: 'Home' },
     { href: '/movies', label: 'Movies' },
     { href: '/cinemas', label: 'Cinemas' },
-    { href: '/movies?status=upcoming', label: 'Upcoming' },
   ];
 
   return (
