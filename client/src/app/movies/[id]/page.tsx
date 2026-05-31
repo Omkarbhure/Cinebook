@@ -115,6 +115,9 @@ export default function MovieDetailPage() {
 
   if (!movie) return null;
 
+  const isUpcoming = new Date(movie.releaseDate) > new Date();
+  const releaseDateStr = new Date(movie.releaseDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
   return (
     <main className={styles.main}>
       <Navbar />
@@ -156,13 +159,14 @@ export default function MovieDetailPage() {
                 {movie.languages.map((l: string) => <span key={l} className={styles.lang}>{l}</span>)}
               </div>
               <button className="btn btn-primary btn-lg" onClick={() => {
+                if (isUpcoming) return;
                 if (!user) {
                   router.push('/auth/login');
                   return;
                 }
                 document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' });
-              }}>
-                Book Tickets
+              }} disabled={isUpcoming} style={isUpcoming ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>
+                {isUpcoming ? `Releasing ${releaseDateStr}` : 'Book Tickets'}
               </button>
             </div>
           </div>
@@ -200,6 +204,16 @@ export default function MovieDetailPage() {
             {/* Sticky Show Booking */}
             <div className={styles.showSide} id="shows">
               <div className={styles.bookingCard}>
+                {isUpcoming ? (
+                  <div className={styles.noShows} style={{ padding: '32px 16px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 48, marginBottom: 12 }}>🎬</div>
+                    <h3 style={{ color: 'var(--text-primary)', marginBottom: 8 }}>Coming Soon</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+                      Booking opens on <strong style={{ color: 'var(--accent)' }}>{releaseDateStr}</strong>
+                    </p>
+                  </div>
+                ) : (
+                  <>
                 <h3 className={styles.bookingTitle}>Booking Shows</h3>
                 
                 {/* Date Picker */}
@@ -276,6 +290,8 @@ export default function MovieDetailPage() {
                     </div>
                   )}
                 </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
