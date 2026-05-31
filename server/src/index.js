@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const { startScheduler } = require('./services/showScheduler');
+const { seedAllCities }  = require('./services/citySeeder');
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -21,9 +22,8 @@ app.set('trust proxy', 1);
 // Connect to MongoDB then start scheduler
 connectDB().then(() => {
   startScheduler();
-}).catch(() => {
-  // connectDB handles its own error logging
-});
+  seedAllCities(); // provision all 39 cities on startup
+}).catch(() => {});
 
 // Middleware
 const allowedOrigins = [
