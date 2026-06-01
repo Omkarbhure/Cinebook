@@ -371,6 +371,57 @@ exports.cancelBooking = async (req, res) => {
       console.warn('Wallet refund failed:', walletErr.message);
     }
 
+    // Send cancellation email
+    try {
+      const User = require('../models/User');
+      const user = await User.findById(req.user._id).select('email name');
+      const populatedBooking = await Booking.findById(booking._id)
+        .populate({ path: 'show', populate: { path: 'theater' } })
+        .populate('movie');
+
+      if (user?.email && populatedBooking) {
+        const movie = populatedBooking.movie;
+        const show  = populatedBooking.show;
+        const theater = show?.theater;
+        const seatList = booking.seats.map(s => `${String.fromCharCode(65 + s.row)}${s.col + 1}`).join(', ');
+        const showDate = show?.date ? new Date(show.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+        await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'api-key': process.env.BREVO_API_KEY,
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            sender: { name: 'CineBook', email: process.env.EMAIL_USER },
+            to: [{ email: user.email, name: user.name }],
+            subject: '🎬 Booking Cancelled — ' + (movie?.title || 'Your Movie'),
+            htmlContent: `
+              <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#0a0a0f;color:#fff;padding:32px;border-radius:12px;">
+                <h2 style="color:#e50914;margin-bottom:4px;">Booking Cancelled</h2>
+                <p style="color:#a0a0a0;margin-bottom:24px;">Your booking has been successfully cancelled.</p>
+                <div style="background:#1a1a26;border:1px solid #333;border-radius:8px;padding:20px;margin-bottom:20px;">
+                  <p style="margin:0 0 8px;font-size:18px;font-weight:700;">${movie?.title || 'Movie'}</p>
+                  <p style="margin:4px 0;color:#a0a0a0;">📍 ${theater?.name || ''}, ${theater?.city || ''}</p>
+                  <p style="margin:4px 0;color:#a0a0a0;">📅 ${showDate} &nbsp;|&nbsp; 🕐 ${show?.time || ''}</p>
+                  <p style="margin:4px 0;color:#a0a0a0;">💺 Seats: ${seatList}</p>
+                  <p style="margin:4px 0;color:#a0a0a0;">🎫 Booking ID: ${booking.bookingId}</p>
+                </div>
+                <div style="background:#0d2b1a;border:1px solid #1a5c35;border-radius:8px;padding:16px;margin-bottom:20px;">
+                  <p style="margin:0;color:#4ade80;font-size:16px;font-weight:700;">✅ ₹${booking.totalAmount} refunded to your CineBook Wallet</p>
+                  <p style="margin:6px 0 0;color:#a0a0a0;font-size:13px;">You can use this balance for your next booking.</p>
+                </div>
+                <p style="color:#666;font-size:12px;">If you did not request this cancellation, please contact support immediately.</p>
+              </div>
+            `,
+          }),
+        });
+      }
+    } catch (emailErr) {
+      console.warn('Cancellation email failed:', emailErr.message);
+    }
+
     res.json({ success: true, message: 'Booking cancelled. ₹' + booking.totalAmount + ' refunded to your CineBook Wallet.' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
