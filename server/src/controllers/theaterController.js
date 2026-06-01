@@ -151,6 +151,17 @@ exports.getTheatersByCity = async (req, res) => {
       return res.status(400).json({ success: false, message: 'City is required' });
     }
 
+    // Return existing seeded theaters first (fast path)
+    const existingTheaters = await Theater.find({ city: new RegExp('^' + city.trim() + '$', 'i') });
+    if (existingTheaters.length > 0) {
+      const theatersWithMovies = await Promise.all(existingTheaters.map(async (theater) => {
+        const movieIds = await Show.find({ theater: theater._id }).distinct('movie');
+        return { ...theater._doc, availableMoviesCount: movieIds.length };
+      }));
+      return res.json({ success: true, data: theatersWithMovies });
+    }
+
+    // No theaters yet — provision via placesService (mock mode if no Google key)
     const realCinemas = await placesService.fetchRealCinemas(city);
 
     const theaters = await Promise.all(realCinemas.map(async (rc) => {
@@ -168,10 +179,10 @@ exports.getTheatersByCity = async (req, res) => {
           location: { type: 'Point', coordinates: [rc.location.lng, rc.location.lat] },
         });
 
-        const movies = await Movie.find({}).limit(3);
+        const movies = await Movie.find({});
         const times = ['11:00 AM', '02:30 PM', '06:00 PM', '09:30 PM'];
         const days = getNext7Days();
-        for (const movie of movies) {
+        for (const movie of movies.slice(0, 5)) {
           for (let di = 0; di < days.length; di++) {
             for (let ti = 0; ti < times.length; ti++) {
               await Show.create({

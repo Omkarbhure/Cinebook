@@ -39,8 +39,8 @@ const getNext7Days = () => {
   const days = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + i);
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCDate(d.getUTCDate() + i);
     days.push(new Date(d));
   }
   return days;

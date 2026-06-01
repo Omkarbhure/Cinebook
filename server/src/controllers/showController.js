@@ -9,10 +9,9 @@ exports.getShowsByMovie = async (req, res) => {
     const filter = { movie: req.params.movieId, isActive: true };
 
     if (date) {
-      // Parse the date string as LOCAL midnight to match how shows are stored
-      const [y, m, d] = date.split('-').map(Number);
-      const start = new Date(y, m - 1, d, 0, 0, 0, 0);   // local midnight
-      const end   = new Date(y, m - 1, d, 23, 59, 59, 999); // local end of day
+      // Use UTC dates to match how MongoDB stores them
+      const start = new Date(date + 'T00:00:00.000Z');
+      const end   = new Date(date + 'T23:59:59.999Z');
       filter.date = { $gte: start, $lte: end };
     }
 
@@ -88,16 +87,15 @@ exports.getShowsByTheater = async (req, res) => {
     const filter = { theater: theaterId, isActive: true };
 
     if (date) {
-      const [y, m, d] = date.split('-').map(Number);
       filter.date = {
-        $gte: new Date(y, m - 1, d, 0, 0, 0, 0),
-        $lte: new Date(y, m - 1, d, 23, 59, 59, 999),
+        $gte: new Date(date + 'T00:00:00.000Z'),
+        $lte: new Date(date + 'T23:59:59.999Z'),
       };
     } else {
-      const now = new Date();
+      const today = new Date().toISOString().split('T')[0];
       filter.date = {
-        $gte: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0),
-        $lte: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999),
+        $gte: new Date(today + 'T00:00:00.000Z'),
+        $lte: new Date(today + 'T23:59:59.999Z'),
       };
     }
 

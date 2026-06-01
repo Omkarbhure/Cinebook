@@ -32,8 +32,9 @@ const generateSeats = () => {
 
 const getLocalMidnight = (offsetDays = 0) => {
   const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + offsetDays);
+  // Use UTC midnight so dates match across timezones
+  d.setUTCHours(0, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() + offsetDays);
   return d;
 };
 
