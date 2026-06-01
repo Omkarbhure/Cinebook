@@ -35,6 +35,7 @@ const seedAllCities = async () => {
   try {
     const Theater = require('../models/Theater');
     const Movie   = require('../models/Movie');
+    const Show    = require('../models/Show');
 
     // Auto-fix movies: if releaseDate is in the past, mark as now_playing
     const now = new Date();
@@ -44,6 +45,14 @@ const seedAllCities = async () => {
     );
     if (fixedMovies.modifiedCount > 0) {
       console.log(`[CitySeeder] Marked ${fixedMovies.modifiedCount} released movies as now_playing.`);
+    }
+
+    // Clear ALL existing shows so scheduler recreates them fresh with correct dates
+    const todayUTC = new Date();
+    todayUTC.setUTCHours(0, 0, 0, 0);
+    const deleted = await Show.deleteMany({ 'seats.userId': null });
+    if (deleted.deletedCount > 0) {
+      console.log(`[CitySeeder] Cleared ${deleted.deletedCount} stale shows for fresh recreation.`);
     }
 
     let citiesCreated = 0;
