@@ -54,11 +54,12 @@ exports.register = async (req, res) => {
     const emailExists = await User.findOne({ email: cleanEmail });
     const phoneExists = await User.findOne({ phone });
 
-    if (emailExists && phoneExists)
+// Fix #7: Allow unverified users to re-register (get new OTP)
+    if (emailExists && emailExists.isVerified && phoneExists && phoneExists.isVerified)
       return res.status(400).json({ success: false, message: 'Email and phone number are already registered.' });
-    if (emailExists)
+    if (emailExists && emailExists.isVerified)
       return res.status(400).json({ success: false, message: 'This email is already registered. Please sign in instead.' });
-    if (phoneExists)
+    if (phoneExists && phoneExists.isVerified)
       return res.status(400).json({ success: false, message: 'This phone number is already registered. Please sign in instead.' });
 
     // Generate OTP and store pending registration data temporarily in a temp user doc

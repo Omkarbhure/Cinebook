@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { getMyBookings, uploadAvatar, updatePassword, getWallet, topUpWallet } from '@/lib/api';
@@ -8,7 +9,8 @@ import toast from 'react-hot-toast';
 import styles from './profile.module.css';
 
 export default function ProfilePage() {
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
@@ -108,7 +110,8 @@ export default function ProfilePage() {
     } finally { setPwLoading(false); }
   };
 
-  if (!user) return <div className="flex-center" style={{height:'100vh'}}><div className="spinner" /></div>;
+  if (authLoading) return <div className="flex-center" style={{height:'100vh'}}><div className="spinner" /></div>;
+  if (!user) { router.replace('/auth/login?redirect=/profile'); return null; }
 
   return (
     <main className={styles.container}>

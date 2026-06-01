@@ -21,9 +21,9 @@ app.set('trust proxy', 1);
 
 // Connect to MongoDB then start scheduler
 connectDB().then(async () => {
-  await seedAllCities(); // ensure all 39 cities have theaters + fix movie statuses
-  startScheduler();      // create shows for all theaters for next 7 days
-}).catch(() => {});
+  await seedAllCities();
+  startScheduler();
+}).catch(err => console.error('[Startup] DB connection failed:', err.message));
 
 // Middleware
 const allowedOrigins = [

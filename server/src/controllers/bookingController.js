@@ -428,7 +428,7 @@ exports.cancelBooking = async (req, res) => {
   }
 };
 
-// ─── Verify Booking (public — for QR scan) ────────────────
+// Fix #10: Mark ticket as used after QR scan
 exports.verifyBooking = async (req, res) => {
   try {
     const booking = await Booking.findOne({ bookingId: req.params.bookingId })
@@ -439,9 +439,17 @@ exports.verifyBooking = async (req, res) => {
       return res.status(404).json({ success: false, valid: false, message: 'Booking not found' });
     }
 
+    const isValid = booking.status === 'confirmed';
+
+    // Mark as used on first valid scan
+    if (isValid) {
+      booking.status = 'used';
+      await booking.save();
+    }
+
     res.json({
       success: true,
-      valid: booking.status === 'confirmed',
+      valid: isValid,
       booking: {
         bookingId: booking.bookingId,
         status: booking.status,

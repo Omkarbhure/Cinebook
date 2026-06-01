@@ -28,8 +28,8 @@ const generateSeats = (rows = 10, cols = 12) => {
 
 const getNext7Days = () => Array.from({ length: 7 }, (_, i) => {
   const d = new Date();
-  d.setHours(0, 0, 0, 0); // LOCAL midnight — matches scheduler
-  d.setDate(d.getDate() + i);
+  d.setUTCHours(0, 0, 0, 0); // UTC midnight — matches showScheduler and query filter
+  d.setUTCDate(d.getUTCDate() + i);
   return new Date(d);
 });
 

@@ -190,14 +190,14 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
 
       // ── Fallback: IP-based ─────────────────────────────────────────────────
       try {
-        const ipRes = await fetch('http://ip-api.com/json?fields=status,city,regionName,lat,lon', {
+        const ipRes = await fetch('https://ipapi.co/json/', {
           signal: AbortSignal.timeout(6000),
         });
         const ipData = await ipRes.json();
-        if (ipData.status === 'success') {
-          let detectedCity = normalizeCity(ipData.city || ipData.regionName || '');
-          if (!detectedCity && ipData.lat && ipData.lon) {
-            detectedCity = findNearestCity(ipData.lat, ipData.lon);
+        if (ipData && ipData.city) {
+          let detectedCity = normalizeCity(ipData.city || ipData.region || '');
+          if (!detectedCity && ipData.latitude && ipData.longitude) {
+            detectedCity = findNearestCity(ipData.latitude, ipData.longitude);
           }
           if (detectedCity) {
             setCity(detectedCity);

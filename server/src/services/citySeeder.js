@@ -47,12 +47,12 @@ const seedAllCities = async () => {
       console.log(`[CitySeeder] Marked ${fixedMovies.modifiedCount} released movies as now_playing.`);
     }
 
-    // Clear ALL existing shows so scheduler recreates them fresh with correct dates
+    // Fix #3: Only delete PAST shows, not all unbooked shows
     const todayUTC = new Date();
     todayUTC.setUTCHours(0, 0, 0, 0);
-    const deleted = await Show.deleteMany({ 'seats.userId': null });
+    const deleted = await Show.deleteMany({ date: { $lt: todayUTC }, 'seats.userId': null });
     if (deleted.deletedCount > 0) {
-      console.log(`[CitySeeder] Cleared ${deleted.deletedCount} stale shows for fresh recreation.`);
+      console.log(`[CitySeeder] Cleared ${deleted.deletedCount} past shows.`);
     }
 
     let citiesCreated = 0;
