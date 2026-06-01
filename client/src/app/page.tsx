@@ -25,7 +25,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMovies = async () => {
+    const fetchMovies = async (attempt = 1) => {
       try {
         const [nowRes, upcomingRes] = await Promise.all([
           getMovies({ status: 'now_playing', limit: '8', ...(city ? { city } : {}) }),
@@ -34,9 +34,15 @@ export default function Home() {
         setNowPlaying(nowRes.data.movies);
         setUpcoming(upcomingRes.data.movies);
       } catch (err) {
-        console.error('Failed to fetch movies:', err);
+        console.error('Failed to fetch movies (attempt ' + attempt + '):', err);
+        // Retry once after 5s if first attempt fails (server may be waking up)
+        if (attempt === 1) {
+          setTimeout(() => fetchMovies(2), 5000);
+          return;
+        }
       } finally {
-        setLoading(false);
+        if (attempt !== 1) setLoading(false);
+        else setLoading(false);
       }
     };
     fetchMovies();
