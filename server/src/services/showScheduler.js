@@ -30,11 +30,11 @@ const getUTCMidnight = (offsetDays = 0) => {
   return d;
 };
 
-const getNext3Days = () => [
-  getUTCMidnight(0),
-  getUTCMidnight(1),
-  getUTCMidnight(2),
-];
+const getNext7Days = () => {
+  const days = [];
+  for (let i = 0; i < 7; i++) days.push(getUTCMidnight(i));
+  return days;
+};
 
 const refreshShows = async () => {
   if (isRefreshing) return;
@@ -53,9 +53,9 @@ const refreshShows = async () => {
       'seats.userId': null,
     });
 
-    const movies   = await Movie.find({});
+    const movies   = await Movie.find({ status: 'now_playing' });
     const theaters = await Theater.find({});
-    const days     = getNext3Days();
+    const days     = getNext7Days();
 
     if (movies.length === 0 || theaters.length === 0) {
       console.log('[Scheduler] No movies or theaters found, skipping.');
@@ -67,7 +67,6 @@ const refreshShows = async () => {
     const existingShows = await Show.find({
       date: { $gte: days[0], $lte: days[days.length - 1] },
     }).select('movie theater date time');
-
     // Build sets for deduplication
     const existingKeys = new Set(
       existingShows.map(s =>

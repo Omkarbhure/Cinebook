@@ -20,9 +20,31 @@ const THEATER_TEMPLATES = [
   { prefix: 'Miraj', suffix: 'Cinemas',   facilities: ['Dolby', 'Snack Bar'] },
 ];
 
+const getNext7Days = () => {
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCDate(d.getUTCDate() + i);
+    days.push(new Date(d));
+  }
+  return days;
+};
+
 const seedAllCities = async () => {
   try {
     const Theater = require('../models/Theater');
+    const Movie   = require('../models/Movie');
+
+    // Auto-fix movies: if releaseDate is in the past, mark as now_playing
+    const now = new Date();
+    const fixedMovies = await Movie.updateMany(
+      { releaseDate: { $lte: now }, status: 'upcoming' },
+      { $set: { status: 'now_playing' } }
+    );
+    if (fixedMovies.modifiedCount > 0) {
+      console.log(`[CitySeeder] Marked ${fixedMovies.modifiedCount} released movies as now_playing.`);
+    }
 
     let citiesCreated = 0;
 
