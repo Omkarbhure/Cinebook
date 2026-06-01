@@ -1,13 +1,6 @@
 /**
  * Show Scheduler — ensures every theater has shows for today + next 2 days
- *
- * Time assignment rules (permanent fix for duplicate times):
- * - Each theater gets exactly 5 shows per day (one per time slot)
- * - Each time slot is used by exactly ONE movie per theater per day
- * - Movies rotate across theaters so the same movie shows at different
- *   times in different theaters (realistic scheduling)
- * - If there are more than 5 movies, only 5 are scheduled per theater
- *   per day (the 5 are picked by rotating the movie list per theater)
+ * Uses UTC dates throughout to avoid timezone issues on Render (UTC server).
  */
 const cron = require('node-cron');
 
@@ -30,18 +23,17 @@ const generateSeats = () => {
   return seats;
 };
 
-const getLocalMidnight = (offsetDays = 0) => {
+const getUTCMidnight = (offsetDays = 0) => {
   const d = new Date();
-  // Use UTC midnight so dates match across timezones
   d.setUTCHours(0, 0, 0, 0);
   d.setUTCDate(d.getUTCDate() + offsetDays);
   return d;
 };
 
 const getNext3Days = () => [
-  getLocalMidnight(0),
-  getLocalMidnight(1),
-  getLocalMidnight(2),
+  getUTCMidnight(0),
+  getUTCMidnight(1),
+  getUTCMidnight(2),
 ];
 
 const refreshShows = async () => {
@@ -53,11 +45,11 @@ const refreshShows = async () => {
     const Theater = require('../models/Theater');
     const Movie   = require('../models/Movie');
 
-    const todayLocal = getLocalMidnight(0);
+    const todayUTC = getUTCMidnight(0);
 
     // Delete past shows with no bookings
     const deleted = await Show.deleteMany({
-      date: { $lt: todayLocal },
+      date: { $lt: todayUTC },
       'seats.userId': null,
     });
 
@@ -65,24 +57,24 @@ const refreshShows = async () => {
     const theaters = await Theater.find({});
     const days     = getNext3Days();
 
-    if (movies.length === 0 || theaters.length === 0) return;
+    if (movies.length === 0 || theaters.length === 0) {
+      console.log('[Scheduler] No movies or theaters found, skipping.');
+      isRefreshing = false;
+      return;
+    }
 
     // Bulk fetch existing shows for the next 3 days
     const existingShows = await Show.find({
       date: { $gte: days[0], $lte: days[days.length - 1] },
     }).select('movie theater date time');
 
-    // Build a Set of existing keys: movieId_theaterId_dateStr_time
+    // Build sets for deduplication
     const existingKeys = new Set(
       existingShows.map(s =>
         s.movie.toString() + '_' + s.theater.toString() + '_' +
         s.date.toISOString().split('T')[0] + '_' + s.time
       )
     );
-
-    // Also track which time slots are already taken per theater+date
-    // to prevent scheduling two movies at the same time in the same theater
-    // Key: theaterId_dateStr_time → true
     const takenSlots = new Set(
       existingShows.map(s =>
         s.theater.toString() + '_' +
@@ -94,33 +86,25 @@ const refreshShows = async () => {
 
     for (let ti = 0; ti < theaters.length; ti++) {
       const theater = theaters[ti];
+      const startIdx = ti % movies.length;
+      const rotated  = [
+        ...movies.slice(startIdx),
+        ...movies.slice(0, startIdx),
+      ].slice(0, SHOW_TIMES.length);
 
       for (const day of days) {
         const dateStr = day.toISOString().split('T')[0];
 
-        // Pick up to 5 movies for this theater on this day.
-        // Rotate the starting index by theater index so different theaters
-        // show different movies at the same time slot.
-        const startIdx = ti % movies.length;
-        const rotated  = [
-          ...movies.slice(startIdx),
-          ...movies.slice(0, startIdx),
-        ].slice(0, SHOW_TIMES.length); // max 5 movies per theater per day
-
         for (let slot = 0; slot < rotated.length; slot++) {
-          const movie     = rotated[slot];
-          const time      = SHOW_TIMES[slot];   // slot 0→10AM, 1→1PM, etc.
-          const format    = SHOW_FORMATS[slot];
-          const movieKey  = movie._id.toString() + '_' + theater._id.toString() + '_' + dateStr + '_' + time;
-          const slotKey   = theater._id.toString() + '_' + dateStr + '_' + time;
+          const movie    = rotated[slot];
+          const time     = SHOW_TIMES[slot];
+          const format   = SHOW_FORMATS[slot];
+          const movieKey = movie._id.toString() + '_' + theater._id.toString() + '_' + dateStr + '_' + time;
+          const slotKey  = theater._id.toString() + '_' + dateStr + '_' + time;
 
-          // Skip if this exact show already exists
           if (existingKeys.has(movieKey)) continue;
-
-          // Skip if this time slot is already taken in this theater on this day
           if (takenSlots.has(slotKey)) continue;
 
-          // Mark slot as taken so we don't double-schedule within this batch
           takenSlots.add(slotKey);
           existingKeys.add(movieKey);
 
@@ -140,22 +124,19 @@ const refreshShows = async () => {
     }
 
     if (toCreate.length > 0) {
-      // Insert in chunks of 20 to avoid memory spikes on free-tier servers
       const CHUNK_SIZE = 20;
       for (let i = 0; i < toCreate.length; i += CHUNK_SIZE) {
         await Show.insertMany(toCreate.slice(i, i + CHUNK_SIZE), { ordered: false });
       }
     }
 
-    if (deleted.deletedCount > 0 || toCreate.length > 0) {
-      console.log('[Scheduler] deleted:', deleted.deletedCount, '| created:', toCreate.length);
-    }
+    console.log('[Scheduler] deleted:', deleted.deletedCount, '| created:', toCreate.length, '| theaters:', theaters.length);
   } catch (err) {
     console.error('[Scheduler] Error:', err.message);
     if (!isRetrying) {
       isRetrying = true;
       setTimeout(async () => {
-        console.log('[Scheduler] Retrying after error...');
+        console.log('[Scheduler] Retrying...');
         isRefreshing = false;
         isRetrying   = false;
         await refreshShows();

@@ -20,9 +20,9 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Connect to MongoDB then start scheduler
-connectDB().then(() => {
-  startScheduler();
-  seedAllCities(); // provision all 39 cities on startup
+connectDB().then(async () => {
+  await seedAllCities(); // ensure all 39 cities have theaters first
+  startScheduler();      // then create shows for all theaters
 }).catch(() => {});
 
 // Middleware
