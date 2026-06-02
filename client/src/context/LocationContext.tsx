@@ -57,20 +57,40 @@ const findNearestCity = (lat: number, lon: number): string => {
 };
 
 const CITY_ALIASES: Record<string, string> = {
-  'new delhi': 'Delhi', 'delhi': 'Delhi',
-  'mumbai': 'Mumbai', 'bombay': 'Mumbai',
+  // Delhi variants
+  'new delhi': 'Delhi', 'delhi': 'Delhi', 'south delhi': 'Delhi', 'north delhi': 'Delhi',
+  'east delhi': 'Delhi', 'west delhi': 'Delhi', 'central delhi': 'Delhi',
+  // Mumbai variants
+  'mumbai': 'Mumbai', 'bombay': 'Mumbai', 'greater mumbai': 'Mumbai',
+  'andheri': 'Mumbai', 'bandra': 'Mumbai', 'kurla': 'Mumbai', 'thane': 'Mumbai',
+  'borivali': 'Mumbai', 'dadar': 'Mumbai', 'malad': 'Mumbai', 'goregaon': 'Mumbai',
+  'powai': 'Mumbai', 'mulund': 'Mumbai', 'versova': 'Mumbai', 'worli': 'Mumbai',
+  // Bengaluru variants
   'bangalore': 'Bengaluru', 'bengaluru': 'Bengaluru', 'bengalore': 'Bengaluru',
-  'pune': 'Pune', 'hyderabad': 'Hyderabad',
-  'chennai': 'Chennai', 'madras': 'Chennai',
-  'kolkata': 'Kolkata', 'calcutta': 'Kolkata',
-  'nagpur': 'Nagpur', 'nashik': 'Nashik',
-  'aurangabad': 'Aurangabad', 'nanded': 'Nanded',
-  'solapur': 'Solapur', 'jaipur': 'Jaipur',
-  'ahmedabad': 'Ahmedabad', 'surat': 'Surat',
-  'indore': 'Indore', 'lucknow': 'Lucknow',
-  'visakhapatnam': 'Visakhapatnam', 'vizag': 'Visakhapatnam',
-  'kochi': 'Kochi', 'cochin': 'Kochi',
-  'chandigarh': 'Chandigarh',
+  'bengaluru urban': 'Bengaluru', 'bruhat bengaluru': 'Bengaluru',
+  // Pune variants
+  'pune': 'Pune', 'pimpri': 'Pune', 'chinchwad': 'Pune', 'pimpri-chinchwad': 'Pune',
+  'hadapsar': 'Pune', 'kothrud': 'Pune', 'shivajinagar': 'Pune', 'wakad': 'Pune',
+  // Hyderabad variants
+  'hyderabad': 'Hyderabad', 'secunderabad': 'Hyderabad', 'cyberabad': 'Hyderabad',
+  'rangareddy': 'Hyderabad', 'medchal': 'Hyderabad',
+  // Chennai variants
+  'chennai': 'Chennai', 'madras': 'Chennai', 'tambaram': 'Chennai', 'velachery': 'Chennai',
+  // Kolkata variants
+  'kolkata': 'Kolkata', 'calcutta': 'Kolkata', 'howrah': 'Kolkata', 'salt lake': 'Kolkata',
+  // Other cities
+  'nagpur': 'Nagpur', 'nashik': 'Nashik', 'aurangabad': 'Aurangabad', 'nanded': 'Nanded',
+  'solapur': 'Solapur', 'jaipur': 'Jaipur', 'ahmedabad': 'Ahmedabad', 'surat': 'Surat',
+  'indore': 'Indore', 'lucknow': 'Lucknow', 'visakhapatnam': 'Visakhapatnam',
+  'vizag': 'Visakhapatnam', 'kochi': 'Kochi', 'cochin': 'Kochi', 'ernakulam': 'Kochi',
+  'chandigarh': 'Chandigarh', 'coimbatore': 'Coimbatore', 'madurai': 'Madurai',
+  'vadodara': 'Vadodara', 'baroda': 'Vadodara', 'bhopal': 'Bhopal', 'patna': 'Patna',
+  'ranchi': 'Ranchi', 'mysuru': 'Mysuru', 'mysore': 'Mysuru', 'mangaluru': 'Mangaluru',
+  'mangalore': 'Mangaluru', 'guwahati': 'Guwahati', 'dehradun': 'Dehradun',
+  'amritsar': 'Amritsar', 'ludhiana': 'Ludhiana', 'agra': 'Agra', 'varanasi': 'Varanasi',
+  'kanpur': 'Kanpur', 'vijayawada': 'Vijayawada', 'bhubaneswar': 'Bhubaneswar',
+  'thiruvananthapuram': 'Thiruvananthapuram', 'trivandrum': 'Thiruvananthapuram',
+  'amravati': 'Amravati',
 };
 
 const normalizeCity = (raw: string): string => {
@@ -156,19 +176,35 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
               { headers: { 'Accept-Language': 'en' } }
             );
             const geoData = await geoRes.json();
+
+            // Try each address field in order — city is most accurate, fall to state_district
             const candidates = [
-              geoData.address?.city, geoData.address?.town,
-              geoData.address?.village, geoData.address?.county,
+              geoData.address?.city,
+              geoData.address?.town,
+              geoData.address?.municipality,
+              geoData.address?.county,
               geoData.address?.state_district,
             ].filter(Boolean);
 
-            if (candidates.length > 0) {
-              detectedCity = normalizeCity(candidates[0]);
+            // Find the first candidate that matches a known city (after normalization)
+            for (const candidate of candidates) {
+              const normalized = normalizeCity(candidate);
+              if (BASE_CITIES.includes(normalized)) {
+                detectedCity = normalized;
+                break;
+              }
+            }
+
+            // If no direct match, try normalizing and see if any alias works
+            if (!detectedCity && candidates.length > 0) {
+              const normalized = normalizeCity(candidates[0]);
+              if (normalized) detectedCity = normalized;
             }
           } catch { /* Nominatim failed */ }
 
-          // If Nominatim failed, use nearest known city
-          if (!detectedCity) {
+          // Always use nearest known city as final fallback using actual GPS coords
+          // This ensures we always return a city from BASE_CITIES
+          if (!detectedCity || !BASE_CITIES.includes(detectedCity)) {
             detectedCity = findNearestCity(lat, lon);
           }
 
