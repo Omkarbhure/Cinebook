@@ -30,10 +30,21 @@ const CITY_COORDS: Record<string, { lat: number; lon: number }> = {
   'Kolkata': { lat: 22.5726, lon: 88.3639 }, 'Nagpur': { lat: 21.1458, lon: 79.0882 },
   'Nashik': { lat: 19.9975, lon: 73.7898 }, 'Aurangabad': { lat: 19.8762, lon: 75.3433 },
   'Nanded': { lat: 18.9068, lon: 77.2967 }, 'Solapur': { lat: 17.6599, lon: 75.9064 },
+  'Amravati': { lat: 20.9320, lon: 77.7523 },
   'Jaipur': { lat: 26.9124, lon: 75.7873 }, 'Ahmedabad': { lat: 23.0225, lon: 72.5714 },
   'Surat': { lat: 21.1702, lon: 72.8311 }, 'Indore': { lat: 22.7196, lon: 75.8577 },
-  'Lucknow': { lat: 26.8467, lon: 80.9462 }, 'Visakhapatnam': { lat: 17.6868, lon: 83.2185 },
-  'Kochi': { lat: 9.9312, lon: 76.2673 }, 'Chandigarh': { lat: 30.7333, lon: 76.7794 },
+  'Bhopal': { lat: 23.2599, lon: 77.4126 },
+  'Lucknow': { lat: 26.8467, lon: 80.9462 }, 'Kanpur': { lat: 26.4499, lon: 80.3319 },
+  'Agra': { lat: 27.1767, lon: 78.0081 }, 'Varanasi': { lat: 25.3176, lon: 82.9739 },
+  'Patna': { lat: 25.5941, lon: 85.1376 }, 'Ranchi': { lat: 23.3441, lon: 85.3096 },
+  'Visakhapatnam': { lat: 17.6868, lon: 83.2185 }, 'Vijayawada': { lat: 16.5062, lon: 80.6480 },
+  'Kochi': { lat: 9.9312, lon: 76.2673 }, 'Thiruvananthapuram': { lat: 8.5241, lon: 76.9366 },
+  'Coimbatore': { lat: 11.0168, lon: 76.9558 }, 'Madurai': { lat: 9.9252, lon: 78.1198 },
+  'Chandigarh': { lat: 30.7333, lon: 76.7794 }, 'Ludhiana': { lat: 30.9010, lon: 75.8573 },
+  'Amritsar': { lat: 31.6340, lon: 74.8723 }, 'Dehradun': { lat: 30.3165, lon: 78.0322 },
+  'Guwahati': { lat: 26.1445, lon: 91.7362 }, 'Bhubaneswar': { lat: 20.2961, lon: 85.8245 },
+  'Mysuru': { lat: 12.2958, lon: 76.6394 }, 'Mangaluru': { lat: 12.9141, lon: 74.8560 },
+  'Vadodara': { lat: 22.3072, lon: 73.1812 },
 };
 
 const distanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -162,7 +173,7 @@ export const LocationProvider = ({ children }: { children: React.ReactNode }) =>
             navigator.geolocation.getCurrentPosition(
               pos => resolve(pos.coords),
               err => reject(err),
-              { timeout: 10000, maximumAge: 60000, enableHighAccuracy: true }
+              { timeout: 15000, maximumAge: 0, enableHighAccuracy: true }
             );
           });
 
