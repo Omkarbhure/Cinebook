@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login({ username, password });
+      await login(username, password);
       router.replace('/admin');
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Invalid admin credentials');
