@@ -10,7 +10,8 @@ exports.protect = async (req, res, next) => {
   if (!token) return res.status(401).json({ success: false, message: 'Not authorized, no token' });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const secret = process.env.JWT_SECRET || 'cinebook_super_secret_jwt_key_2026';
+    const decoded = jwt.verify(token, secret);
 
     // Guard against malformed token payload
     if (!decoded.id || !mongoose.Types.ObjectId.isValid(decoded.id)) {

@@ -4,8 +4,13 @@ const crypto = require('crypto');
 const twilio = require('twilio');
 const nodemailer = require('nodemailer');
 
-const generateToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
+const generateToken = (id) => {
+  const secret = process.env.JWT_SECRET || 'cinebook_super_secret_jwt_key_2026';
+  const expire = (process.env.JWT_EXPIRE && typeof process.env.JWT_EXPIRE === 'string' && process.env.JWT_EXPIRE.trim())
+    ? process.env.JWT_EXPIRE.trim()
+    : '7d';
+  return jwt.sign({ id }, secret, { expiresIn: expire });
+};
 
 const isTwilioConfigured = () =>
   !!process.env.TWILIO_ACCOUNT_SID && !process.env.TWILIO_ACCOUNT_SID.startsWith('your_') &&
