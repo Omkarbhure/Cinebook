@@ -135,4 +135,17 @@ Open [http://localhost:3002](http://localhost:3002) in your browser.
 To log into the administrator dashboard, navigate to **Profile → Admin Panel** or select it from the navigation links and use the credentials below:
 * **Admin Login**: `admin@cinebook.com`
 * **Admin Password**: `admin123`
-# Cinebook
+
+---
+
+## 🏛 Architecture: Cancellation, Refund & Email System (ACID & Service Abstraction)
+
+For in-depth technical analysis, sequence diagrams, ACID transaction guarantees, and the email notification abstraction blueprint, see:
+👉 **[CINEBOOK_CANCELLATION_REFUND_ARCHITECTURE.md](file:///c:/Users/ASUS/OneDrive/Desktop/Cinebook/CINEBOOK_CANCELLATION_REFUND_ARCHITECTURE.md)**
+
+### Key Highlights:
+1. **Service Layer Abstraction (`emailService.js`)**: Encapsulates Brevo HTTP REST API $\to$ Gmail SMTP fallback $\to$ Audit Logger with responsive, dark-themed HTML email receipts (movie poster, seats, screen time, refund badge, and updated wallet balance).
+2. **Atomicity (Compare-And-Swap CAS)**: Uses atomic `Booking.findOneAndUpdate({ _id, user, status: 'confirmed' })` to guarantee strict idempotency and eliminate double-refund race conditions.
+3. **Atomic Wallet Engine**: Uses MongoDB `$inc` and `$push` for atomic balance updates and immutable transaction logs.
+4. **Consistency Invariants**: Guarantees real-time seat inventory release, movie analytics accuracy, and fault-tolerant asynchronous notifications.
+
