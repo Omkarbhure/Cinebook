@@ -262,11 +262,12 @@ Following the **Secure Vibe Coding** standards:
 
 ### 7.2 Automated Test Suite
 - **Location**: `server/full_test_suite.js` & `server/test_suite.js`
-- **Current Status**: **24/24 Core Test Assertions Passing (100% Pass Rate)**
+- **Current Status**: **20/20 Core Test Assertions Passing (100% Pass Rate)**
 - **Coverage Areas**:
   - Security headers (`helmet`, `nosniff`, `x-frame-options`, NoSQL injection prevention)
-  - Full Authentication & 2-Step OTP email verification
-  - 5-Minute OTP timer & Dedicated Resend Endpoints (`/resend-register-otp`, `/resend-login-otp`)
+  - Direct password login (Option 1) with instantaneous JWT issuance
+  - Account registration with 5-minute OTP verification & resend timer
+  - Dedicated Resend Endpoints (`/resend-register-otp`)
   - Forgot password flow & OTP-based password reset
   - Movie catalog integrity, individual movie metadata & showtimes
   - Seat locking concurrency & simultaneous conflict resolution
