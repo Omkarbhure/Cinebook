@@ -1,0 +1,27 @@
+name: Keep Render Server Active
+
+on:
+  schedule:
+    # Trigger every 5 minutes (standard GitHub Actions minimum cron)
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    name: Ping Server (1-Min Interval)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Send keep-alive requests every 1 minute
+        run: |
+          echo "Starting 1-minute interval ping sequence..."
+          for i in {1..5}
+          do
+            TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%SZ")
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://cinebook-yyd3.onrender.com/api/movies || echo "000")
+            echo "[$TIMESTAMP] Ping #$i -> Status: $HTTP_STATUS"
+            if [ $i -lt 5 ]; then
+              sleep 60
+            fi
+          done
+          echo "Completed 5-minute batch successfully."

@@ -1,0 +1,130 @@
+.main {
+  min-height: 100vh;
+  padding-top: 80px;
+}
+
+.header {
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.theaterList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.theaterCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.theaterCard:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card);
+  transform: scale(1.02);
+}
+
+.theaterHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.theaterHeader h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.distanceBadge {
+  background: var(--primary-glow);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.address {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.rating { color: var(--accent); font-weight: 700; }
+.moviesCount { color: var(--text-muted); }
+
+.facilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.facilityTag {
+  background: rgba(255,255,255,0.05);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.actions {
+  flex-shrink: 0;
+}
+
+.errorCard {
+  max-width: 500px;
+  margin: 40px auto;
+  text-align: center;
+  padding: 40px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.errorIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.errorCard h3 { margin-bottom: 8px; }
+.errorCard p { color: var(--text-muted); margin-bottom: 24px; }
+
+.emptyState {
+  text-align: center;
+  padding: 60px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+  .theaterCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .actions {
+    width: 100%;
+  }
+  .actions a {
+    width: 100%;
+    text-align: center;
+  }
+}
