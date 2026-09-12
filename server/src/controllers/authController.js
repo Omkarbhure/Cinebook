@@ -337,62 +337,12 @@ exports.login = async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
-    // Admin → always skip OTP, return token immediately (whether logged in via username or email)
-    if (user.role === 'admin') {
-      const token = generateToken(user._id);
-      return res.json({
-        success: true,
-        token,
-        user: { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar },
-      });
-    }
-
-    // User with email → send OTP for 2-step verification
-    if (user.email) {
-      const otp = generateOtp();
-      user.loginOtp = otp;
-      user.loginOtpExpire = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-      await user.save();
-
-      try {
-        await sendEmail({
-          to: user.email,
-          subject: '🔐 Your CineBook Login OTP',
-          html: '<div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0a0a0f;color:#fff;padding:32px;border-radius:12px;">' +
-            '<h2 style="color:#e50914;margin-bottom:8px;">Login Verification</h2>' +
-            '<p style="color:#a0a0a0;margin-bottom:24px;">Use the OTP below to complete your login. It expires in 5 minutes.</p>' +
-            '<div style="background:#1a1a26;border:1px solid #333;border-radius:8px;padding:24px;text-align:center;margin-bottom:24px;">' +
-            '<span style="font-size:36px;font-weight:900;letter-spacing:8px;color:#fff;">' + otp + '</span>' +
-            '</div>' +
-            '<p style="color:#666;font-size:13px;">If you did not request this, please ignore this email.</p>' +
-            '</div>',
-        });
-      } catch (emailErr) {
-        console.error('Failed to send login OTP email:', emailErr.message);
-        user.loginOtp = undefined;
-        user.loginOtpExpire = undefined;
-        await user.save().catch(() => {});
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to send OTP email. Please verify your Brevo sender email or Gmail SMTP configuration.',
-        });
-      }
-
-      return res.json({
-        success: true,
-        requiresOtp: true,
-        maskedEmail: maskEmail(user.email),
-        userId: user._id,
-        message: 'OTP sent to your email',
-      });
-    }
-
-    // User without email (phone-only) → return token directly
+    // Admin or normal user with matching password → direct instant login
     const token = generateToken(user._id);
-    res.json({
+    return res.json({
       success: true,
       token,
-      user: { id: user._id, name: user.name, email: user.email, phone: user.phone, role: user.role, avatar: user.avatar },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar },
     });
   } catch (err) {
     console.error('[Login Error]', err.message, err.stack);

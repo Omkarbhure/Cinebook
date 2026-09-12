@@ -121,50 +121,17 @@ async function runAllTests() {
     recordTest('Auth', 'Verify Register OTP Flow', false, err.response?.data?.message || err.message);
   }
 
-  // 2.4 Login with 2FA OTP
-  let loginOtpCode = '';
+  // 2.4 Direct Login with Password (Option 1)
   try {
     const loginRes = await axios.post(`${API}/auth/login`, {
       email: testEmail,
       password: testPassword
     });
 
-    recordTest('Auth', 'User Login requires 2-Step OTP verification', loginRes.data.requiresOtp === true);
-
-    const userDoc = await User.findById(createdUserId).select('+loginOtp +loginOtpExpire');
-    loginOtpCode = userDoc.loginOtp;
-    recordTest('Auth', 'Login OTP has active 5-minute expiration', userDoc.loginOtpExpire > new Date());
+    authToken = loginRes.data.token;
+    recordTest('Auth', 'User Login with password returns JWT token directly', !!authToken && loginRes.data.success === true);
   } catch (err) {
-    recordTest('Auth', 'User Login 2FA Request', false, err.response?.data?.message || err.message);
-  }
-
-  // 2.5 Resend Login OTP endpoint
-  try {
-    const resendLoginRes = await axios.post(`${API}/auth/resend-login-otp`, {
-      userId: createdUserId,
-      email: testEmail
-    });
-
-    recordTest('Auth', 'POST /auth/resend-login-otp succeeds', resendLoginRes.data.success === true);
-
-    const updatedUser = await User.findById(createdUserId).select('+loginOtp +loginOtpExpire');
-    recordTest('Auth', 'Resend Login OTP generates fresh 6-digit code', !!updatedUser.loginOtp);
-    loginOtpCode = updatedUser.loginOtp;
-  } catch (err) {
-    recordTest('Auth', 'POST /auth/resend-login-otp', false, err.response?.data?.message || err.message);
-  }
-
-  // 2.6 Verify Login OTP
-  try {
-    const verifyLoginRes = await axios.post(`${API}/auth/verify-login-otp`, {
-      userId: createdUserId,
-      otp: loginOtpCode
-    });
-
-    authToken = verifyLoginRes.data.token;
-    recordTest('Auth', 'Verify Login OTP returns authenticated JWT session', !!authToken);
-  } catch (err) {
-    recordTest('Auth', 'Verify Login OTP', false, err.response?.data?.message || err.message);
+    recordTest('Auth', 'User Direct Password Login', false, err.response?.data?.message || err.message);
   }
 
   // 2.7 Forgot Password & Reset OTP Flow
@@ -277,12 +244,7 @@ async function runAllTests() {
         email: competitor.email,
         password: 'Password123!'
       });
-      const compDoc = await User.findById(competitor._id).select('+loginOtp');
-      const compVerifyRes = await axios.post(`${API}/auth/verify-login-otp`, {
-        userId: competitor._id,
-        otp: compDoc.loginOtp
-      });
-      const competitorToken = compVerifyRes.data.token;
+      const competitorToken = compLoginRes.data.token;
 
       // 4.3 Race condition test: competitor tries to lock same seat
       const raceRes = await axios.post(`${API}/bookings/lock`, {
