@@ -49,29 +49,25 @@ const allowedOrigins = [
 // Preflight fallback — ensures OPTIONS requests never get blocked
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  }
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
-    if (process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
+    // Allow all origins (all vercel preview URLs, production URLs, and local dev)
+    return callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 };
+
+app.use(cors(corsOptions));
 
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -160,6 +156,15 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/theaters', theaterRoutes);
 app.use('/api/wallet', walletRoutes);
+
+// Dual mounting aliases (for clients sending without /api)
+app.use('/auth', authRoutes);
+app.use('/movies', movieRoutes);
+app.use('/shows', showRoutes);
+app.use('/bookings', bookingRoutes);
+app.use('/admin', adminRoutes);
+app.use('/theaters', theaterRoutes);
+app.use('/wallet', walletRoutes);
 
 // 404 Handler
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
