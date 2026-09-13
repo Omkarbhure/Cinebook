@@ -181,10 +181,14 @@ export default function Navbar() {
               </Link>
             ))}
             {!user && (
-              <>
-                <Link href="/auth/login" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>Login</Link>
-                <Link href="/auth/register" className="btn btn-primary btn-full" onClick={() => setMenuOpen(false)}>Sign Up</Link>
-              </>
+              <div className={styles.mobileAuthButtons}>
+                <Link href="/auth/login" className="btn btn-secondary btn-full" onClick={() => setMenuOpen(false)}>
+                  Login
+                </Link>
+                <Link href="/auth/register" className="btn btn-primary btn-full" onClick={() => setMenuOpen(false)}>
+                  Sign Up
+                </Link>
+              </div>
             )}
           </div>
         )}

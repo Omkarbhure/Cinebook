@@ -191,26 +191,35 @@
 }
 .mobileLink:hover, .mobileLink.active { background: var(--bg-elevated); color: var(--text-primary); }
 
+.mobileAuthButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
 @media (max-width: 1024px) {
   .searchBar { max-width: 200px; }
   .navLink { padding: 6px 10px; font-size: 13px; }
 }
 
 @media (max-width: 768px) {
-  .navLinks, .searchBar { display: none; }
+  .navLinks, .searchBar, .authButtons { display: none !important; }
   .menuBtn { display: flex; }
-  .inner { gap: 12px; padding: 12px 0; justify-content: space-between; }
+  .inner { gap: 10px; padding: 12px 0; justify-content: space-between; }
   .citySelector { margin-left: 0; }
   .cityBtn { padding: 6px 10px; font-size: 13px; gap: 4px; }
   .cityDropdown { left: auto; right: 0; min-width: 240px; }
-  .authButtons .btn { padding: 6px 12px; font-size: 13px; }
   .userName { display: none; }
   .avatarBtn { padding: 4px; }
 }
 
 @media (max-width: 480px) {
-  .logoText { font-size: 20px; }
-  .logoIcon { font-size: 20px; }
-  .cityBtn span { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .logoText { font-size: 19px; }
+  .logoIcon { font-size: 19px; }
+  .cityBtn span { max-width: 75px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
+
 
